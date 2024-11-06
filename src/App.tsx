@@ -79,7 +79,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 md:mb-8 text-center">What Time is it?</h1>
       <motion.div
-        className="bg-black rounded-xl p-6 md:p-8 shadow-lg mb-6 md:mb-8 w-full max-w-sm md:max-w-md"
+        className="bg-black rounded-xl p-6 md:p-8 shadow-lg mb-6 md:mb-8 w-full max-w-sm md:max-w-lg"
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -117,7 +117,7 @@ export default function App() {
         </motion.div>
       </motion.div>
 
-      <div className="bg-black text-white rounded-xl p-4 md:p-6 shadow-lg w-full max-w-sm md:max-w-md">
+      <div className="bg-black text-white rounded-xl p-4 md:p-6 shadow-lg w-full max-w-sm md:max-w-lg">
         <h2 className="text-xl md:text-2xl font-bold mb-4 text-center">Time Details</h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <div className="space-y-4">
@@ -135,6 +135,7 @@ export default function App() {
               id="timezone-select"
               options={timeZones}
               value={selectedTimeZone}
+              menuPlacement='top'
               onChange={(newValue) => setSelectedTimeZone(newValue as TimeZone)}
               isDisabled={loading}
               isSearchable={true}
