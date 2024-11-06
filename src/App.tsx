@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+"use client"
+
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Select from 'react-select'
 
@@ -8,15 +10,14 @@ interface TimeZone {
 }
 
 interface TimeResponse {
-  datetime: string
-  timezone: string
-  utc_offset: string
+  dateTime: string
+  timeZone: string
+  currentLocalTime: string
 }
 
 export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [selectedTimeZone, setSelectedTimeZone] = useState<TimeZone | null>(null)
-  const [worldTime, setWorldTime] = useState<Date | null>(null)
   const [timeZones, setTimeZones] = useState<TimeZone[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,13 +30,16 @@ export default function App() {
   useEffect(() => {
     fetch('https://timeapi.io/api/TimeZone/AvailableTimeZones')
       .then(response => response.json())
-      .then((data: string[]) => {  // Specify the type here
-        const formattedZones = data.map((zone: string) => ({
-          value: zone,
-          label: zone.replace(/_/g, ' ')
-        }))
+      .then(data => {
+        const formattedZones = [
+          { value: 'local', label: 'Local Time' },
+          ...data.map((zone: string) => ({
+            value: zone,
+            label: zone.replace(/_/g, ' ')
+          }))
+        ]
         setTimeZones(formattedZones)
-        setSelectedTimeZone(formattedZones.find(tz => tz.value === "UTC") || null)
+        setSelectedTimeZone(formattedZones[0]) // Set local time as default
         setLoading(false)
       })
       .catch(() => {
@@ -45,12 +49,12 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (selectedTimeZone) {
+    if (selectedTimeZone && selectedTimeZone.value !== 'local') {
       setLoading(true)
       fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${selectedTimeZone.value}`)
         .then(response => response.json())
         .then((data: TimeResponse) => {
-          setWorldTime(new Date(data.datetime))
+          setCurrentTime(new Date(data.dateTime))
           setLoading(false)
           setError(null)
         })
@@ -58,21 +62,18 @@ export default function App() {
           setError('Failed to fetch world time')
           setLoading(false)
         })
+    } else if (selectedTimeZone && selectedTimeZone.value === 'local') {
+      setCurrentTime(new Date())
+      setLoading(false)
+      setError(null)
     }
   }, [selectedTimeZone])
 
   const formatTimeUnit = (unit: number) => unit.toString().padStart(2, '0')
 
-  const getDisplayTime = useMemo(() => {
-    const timeToDisplay = worldTime || currentTime
-    return {
-      hours: formatTimeUnit(timeToDisplay.getHours()),
-      minutes: formatTimeUnit(timeToDisplay.getMinutes()),
-      seconds: formatTimeUnit(timeToDisplay.getSeconds())
-    }
-  }, [worldTime, currentTime])
-
-  const { hours, minutes, seconds } = getDisplayTime
+  const hours = formatTimeUnit(currentTime.getHours())
+  const minutes = formatTimeUnit(currentTime.getMinutes())
+  const seconds = formatTimeUnit(currentTime.getSeconds())
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 flex flex-col items-center justify-center p-4">
@@ -132,7 +133,6 @@ export default function App() {
             <label htmlFor="timezone-select" className="block text-gray-400 mb-2 text-sm md:text-base">Select Time Zone:</label>
             <Select
               id="timezone-select"
-              menuPlacement='auto'
               options={timeZones}
               value={selectedTimeZone}
               onChange={(newValue) => setSelectedTimeZone(newValue as TimeZone)}
